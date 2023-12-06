@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { GoSearch } from 'react-icons/go';
 import {
@@ -8,19 +8,14 @@ import {
   SearchFormInput,
 } from './Searchbar.styled';
 
-export default class Searchbar extends Component {
-  state = {
-    searchValue: '',
+const Searchbar = ({ onSubmit }) => {
+  const [searchValue, setSearchValue] = useState('');
+
+  const onInputChange = evt => {
+    setSearchValue(evt.currentTarget.value);
   };
 
-  onInputChange = evt => {
-    this.setState({
-      searchValue: evt.currentTarget.value,
-    });
-  };
-
-  onFormSubmit = evt => {
-    const { searchValue } = this.state;
+  const onFormSubmit = evt => {
     evt.preventDefault();
 
     if (!searchValue.trim()) {
@@ -30,30 +25,28 @@ export default class Searchbar extends Component {
       });
     }
 
-    this.props.onSubmit(searchValue.trim());
-    this.setState({ searchValue: '' });
+    onSubmit(searchValue.trim());
+    setSearchValue('');
   };
 
-  render() {
-    const { searchValue } = this.state;
+  return (
+    <SearchBar>
+      <SearchForm onSubmit={onFormSubmit}>
+        <SearchFormButton>
+          <GoSearch size="24" />
+        </SearchFormButton>
 
-    return (
-      <SearchBar>
-        <SearchForm onSubmit={this.onFormSubmit}>
-          <SearchFormButton>
-            <GoSearch size="24" />
-          </SearchFormButton>
+        <SearchFormInput
+          type="text"
+          autoComplete="off"
+          autoFocus
+          placeholder="Search images and photos"
+          value={searchValue}
+          onChange={onInputChange}
+        />
+      </SearchForm>
+    </SearchBar>
+  );
+};
 
-          <SearchFormInput
-            type="text"
-            autoComplete="off"
-            autoFocus
-            placeholder="Search images and photos"
-            value={searchValue}
-            onChange={this.onInputChange}
-          />
-        </SearchForm>
-      </SearchBar>
-    );
-  }
-}
+export default Searchbar;

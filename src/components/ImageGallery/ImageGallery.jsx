@@ -1,42 +1,32 @@
 import { toast } from 'react-toastify';
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import Button from 'components/Button/Button';
 import Loader from 'components/Loader/Loader';
 import ImageGalleryItem from 'components/ImageGalleryItem/ImageGalleryItem';
 import { getImagesBySearchQuery } from '../api/api';
 import { Gallery } from './ImageGallery.styled';
 
-export default class ImageGallery extends Component {
-  state = {
-    images: [],
-    isLoading: false,
-    currentPage: 1,
-    error: null,
-  };
+const ImageGallery = ({ searchValue, toggleModal }) => {
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [error, setError] = useState(null);
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.searchValue !== this.props.searchValue) {
-      this.setState(
-        { images: [], isLoading: true, currentPage: 1 },
-        this.fetchImages
-      );
+  useEffect(() => {
+    if (searchValue !== '') {
+      setImages([]);
+      setIsLoading(true);
+      setCurrentPage(1);
+      fetchImages();
     }
-  }
+  }, [searchValue]);
 
-  onLoadMoreClick = () => {
-    this.setState(
-      prevState => ({
-        isLoading: true,
-        currentPage: prevState.currentPage + 1,
-      }),
-      this.fetchImages
-    );
+  const onLoadMoreClick = () => {
+    setIsLoading(true);
+    setCurrentPage(prevPage => prevPage + 1);
   };
 
-  fetchImages = async () => {
-    const { currentPage } = this.state;
-    const { searchValue } = this.props;
-
+  const fetchImages = async () => {
     try {
       const newImages = await getImagesBySearchQuery(searchValue, currentPage);
 
@@ -47,49 +37,43 @@ export default class ImageGallery extends Component {
         });
       }
 
-      this.setState(prevState => ({
-        images: [...prevState.images, ...newImages.hits],
-        imagesLoading: true,
-      }));
+      setImages(prevImages => [...prevImages, ...newImages.hits]);
 
-      if (newImages.hits.length < 12) this.setState({ imagesLoading: false });
+      if (newImages.hits.length < 12) setIsLoading(false);
     } catch (error) {
-      this.errorResponse(error);
+      errorResponse(error);
     } finally {
-      this.setState({ isLoading: false });
+      setIsLoading(false);
     }
   };
 
-  errorResponse = error => {
-    this.setState({ error: error.message }, () => {
-      toast.error(`Sorry... There was an error: ${this.state.error}`, {
-        autoClose: 2500,
-        pauseOnHover: false,
-      });
+  const errorResponse = error => {
+    setError(error.message);
+    toast.error(`Sorry... There was an error: ${error.message}`, {
+      autoClose: 2500,
+      pauseOnHover: false,
     });
   };
 
-  render() {
-    const { images, isLoading } = this.state;
+  return (
+    <>
+      <Gallery>
+        {images.map(image => (
+          <ImageGalleryItem
+            key={image.id}
+            smallImg={image.webformatURL}
+            largeImg={image.largeImageURL}
+            tags={image.tags}
+            toggleModal={() => toggleModal(image.largeImageURL)}
+          />
+        ))}
+      </Gallery>
 
-    return (
-      <>
-        <Gallery>
-          {images.map(image => (
-            <ImageGalleryItem
-              key={image.id}
-              smallImg={image.webformatURL}
-              largeImg={image.largeImageURL}
-              tags={image.tags}
-              toggleModal={() => this.props.toggleModal(image.largeImageURL)}
-            />
-          ))}
-        </Gallery>
+      {isLoading && <Loader />}
 
-        {isLoading && <Loader />}
+      {images.length > 0 && <Button onClick={onLoadMoreClick} />}
+    </>
+  );
+};
 
-        {images.length > 0 && <Button onClick={this.onLoadMoreClick} />}
-      </>
-    );
-  }
-}
+export default ImageGallery;

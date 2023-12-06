@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import ImageGallery from '../ImageGallery/ImageGallery';
 import Modal from '../Modal/Modal';
 import Searchbar from '../Searchbar/Searchbar';
@@ -7,49 +7,35 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AppContainer } from './app.styled';
 import { GlobalStyle } from '../GlobalStyle.styled';
 
-export default class App extends Component {
-  state = {
-    searchValue: '',
-    modalOpened: false,
-    modalImage: null,
+const App = () => {
+  const [searchValue, setSearchValue] = useState('');
+  const [modalOpened, setModalOpened] = useState(false);
+  const [modalImage, setModalImage] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem('search-value', JSON.stringify(searchValue));
+  }, [searchValue]);
+
+  const onSearchFormSubmit = searchValue => {
+    setSearchValue(searchValue);
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.searchValue !== this.state.searchValue) {
-      localStorage.setItem(
-        'search-value',
-        JSON.stringify(this.state.searchValue)
-      );
-    }
-  }
-
-  onSearchFormSubmit = searchValue => {
-    this.setState({ searchValue });
+  const toggleModal = img => {
+    setModalOpened(prevModalOpened => !prevModalOpened);
+    setModalImage(img);
   };
 
-  toggleModal = img => {
-    this.setState(prevState => ({
-      modalOpened: !prevState.modalOpened,
-      modalImage: img,
-    }));
-  };
-  render() {
-    const { searchValue, modalOpened, modalImage } = this.state;
-    return (
-      <>
-        <GlobalStyle $modalOpened={modalOpened} />
-        <AppContainer>
-          <Searchbar onSubmit={this.onSearchFormSubmit} />
-          <ImageGallery
-            searchValue={searchValue}
-            toggleModal={this.toggleModal}
-          />
-          {modalOpened && (
-            <Modal toggleModal={this.toggleModal} img={modalImage} />
-          )}
-          <ToastContainer />
-        </AppContainer>
-      </>
-    );
-  }
-}
+  return (
+    <>
+      <GlobalStyle $modalOpened={modalOpened} />
+      <AppContainer>
+        <Searchbar onSubmit={onSearchFormSubmit} />
+        <ImageGallery searchValue={searchValue} toggleModal={toggleModal} />
+        {modalOpened && <Modal toggleModal={toggleModal} img={modalImage} />}
+        <ToastContainer />
+      </AppContainer>
+    </>
+  );
+};
+
+export default App;

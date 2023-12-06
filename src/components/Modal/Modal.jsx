@@ -1,48 +1,38 @@
 import { createPortal } from 'react-dom';
-import { Component } from 'react';
+import { useEffect } from 'react';
 import { ModalWindow, Overlay, ModalImg } from './Modal.styled';
 
 const modalRoot = document.querySelector('#modal-root');
 
-export default class Modal extends Component {
-  componentDidMount() {
-    document.addEventListener('keydown', this.escapeHandlePress);
-  }
+const Modal = ({ img, toggleModal }) => {
+  useEffect(() => {
+    const escapeHandlePress = evt => {
+      if (evt.code === 'Escape') {
+        toggleModal();
+      }
+    };
 
-  componentWillUnmount() {
-    document.removeEventListener('keydown', this.escapeHandlePress);
-  }
+    document.addEventListener('keydown', escapeHandlePress);
 
-  overlayHandleClick = evt => {
-    const { toggleModal } = this.props;
+    return () => {
+      document.removeEventListener('keydown', escapeHandlePress);
+    };
+  }, [toggleModal]);
 
+  const overlayHandleClick = evt => {
     if (evt.target === evt.currentTarget) {
       toggleModal();
     }
   };
 
-  escapeHandlePress = evt => {
-    const { toggleModal } = this.props;
+  return createPortal(
+    <Overlay onClick={overlayHandleClick}>
+      <ModalWindow>
+        <ModalImg src={img} />
+      </ModalWindow>
+    </Overlay>,
+    modalRoot
+  );
+};
 
-    if (evt.code === 'Escape') {
-      toggleModal();
-    }
-  };
-
-  render() {
-    const { img } = this.props;
-
-    return (
-      <>
-        {createPortal(
-          <Overlay onClick={this.overlayHandleClick}>
-            <ModalWindow>
-              <ModalImg src={img} />
-            </ModalWindow>
-          </Overlay>,
-          modalRoot
-        )}
-      </>
-    );
-  }
-}
+export default Modal;
