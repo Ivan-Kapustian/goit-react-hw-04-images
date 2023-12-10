@@ -5,6 +5,7 @@ import Loader from 'components/Loader/Loader';
 import ImageGalleryItem from 'components/ImageGalleryItem/ImageGalleryItem';
 import { getImagesBySearchQuery } from '../api/api';
 import { Gallery } from './ImageGallery.styled';
+import { v4 as uuidv4 } from 'uuid';
 
 const ImageGallery = ({ searchValue, toggleModal }) => {
   const [images, setImages] = useState([]);
@@ -19,7 +20,7 @@ const ImageGallery = ({ searchValue, toggleModal }) => {
       setCurrentPage(1);
       fetchImages();
     }
-  }, [searchValue]);
+  }, [searchValue, currentPage]);
 
   const onLoadMoreClick = () => {
     setIsLoading(true);
@@ -30,7 +31,7 @@ const ImageGallery = ({ searchValue, toggleModal }) => {
     try {
       const newImages = await getImagesBySearchQuery(searchValue, currentPage);
 
-      if (!newImages) {
+      if (!newImages || !newImages.hits || newImages.hits.length === 0) {
         return toast.error('Sorry... There are no such images', {
           autoClose: 2500,
           pauseOnHover: false,
@@ -60,7 +61,7 @@ const ImageGallery = ({ searchValue, toggleModal }) => {
       <Gallery>
         {images.map(image => (
           <ImageGalleryItem
-            key={image.id}
+            key={uuidv4()}
             smallImg={image.webformatURL}
             largeImg={image.largeImageURL}
             tags={image.tags}
